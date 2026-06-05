@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 KEEP_COLUMNS: list[str] = [
     # Nhóm định danh (Metadata — phục vụ truy vết)
-    "srcip", "dstip", "sport", "dport", "ltime",
+    "src_mac", "dst_mac", "srcip", "dstip", "sport", "dport", "ltime",
     # Nhóm 1: TTL & Trạng thái
     "sttl", "ct_state_ttl", "dttl",
     # Nhóm 2: Lưu lượng
