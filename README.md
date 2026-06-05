@@ -2,8 +2,7 @@
 
 > **Module lọc và tối ưu hóa đặc trưng cho phát hiện tấn công từ chối dịch vụ (DoS)**
 
-`dos_feature_filter.py` là công cụ tối ưu hóa dữ liệu mạng CSV bằng cách lọc giữ lại **28 đặc trưng then chốt** phục vụ phát hiện tấn công DoS và tự động downcast kiểu dữ liệu để tiết kiệm tới 60%+ bộ nhớ RAM.
-
+`dos_feature_filter.py` là công cụ tối ưu hóa dữ liệu mạng CSV bằng cách lọc giữ lại **28 đặc trưng then chốt** phục vụ phát hiện tấn công DoS 
 ---
 
 ## 🚀 Cài đặt & Yêu cầu
