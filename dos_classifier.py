@@ -119,7 +119,8 @@ def load_zeek_http_log(zeek_dir: str) -> Dict[Tuple[str, str], str]:
 
     # Xác định đường dẫn chính xác tới http.log
     if os.path.isfile(zeek_dir):
-        if os.path.basename(zeek_dir) == "http.log":
+        bname = os.path.basename(zeek_dir)
+        if bname == "http.log" or bname.endswith("_http.log"):
             http_log_path = zeek_dir
     else:
         # Tìm trong thư mục trực tiếp
@@ -431,10 +432,27 @@ def main() -> None:
 
     # 1. Load http.log Zeek (Lookup O(1))
     http_lookup = {}
+    csv_path = os.path.abspath(args.csv)
+    csv_dir = os.path.dirname(csv_path)
+    csv_filename = os.path.basename(csv_path)
+    name_part, _ = os.path.splitext(csv_filename)
+    if name_part.endswith("_dos_features"):
+        base_name = name_part[:-13]
+    elif name_part.endswith("_raw"):
+        base_name = name_part[:-4]
+    else:
+        base_name = name_part
+
     if args.zeek_dir:
         http_lookup = load_zeek_http_log(args.zeek_dir)
     else:
-        logger.info("Không truyền --zeek-dir. Chế độ bỏ qua truy ngược User-Agent.")
+        # Tự động tìm kiếm file <base_name>_http.log cùng thư mục
+        http_log_candidate = os.path.join(csv_dir, f"{base_name}_http.log")
+        if os.path.isfile(http_log_candidate):
+            logger.info("Tự động tìm thấy file HTTP log: %s", http_log_candidate)
+            http_lookup = load_zeek_http_log(http_log_candidate)
+        else:
+            logger.warning("Không tìm thấy file HTTP log tại: %s. Trả thông tin User-Agent về 'N/A'.", http_log_candidate)
 
     # 2. Đọc file CSV
     logger.info("Đang đọc và phân tích file: %s", args.csv)

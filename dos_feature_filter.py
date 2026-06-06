@@ -15,6 +15,7 @@ Cách sử dụng:
 import argparse
 import logging
 import sys
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -193,6 +194,26 @@ def filter_dos_features(input_path: str, output_path: str) -> pd.DataFrame:
     file_size = out.stat().st_size
     logger.info("✅ Đã lưu kết quả: %s (%s)", out, _fmt_bytes(file_size))
 
+    # Tự động tìm kiếm và copy <base_name>_http.log nếu có
+    name_part = input_file.stem
+    if name_part.endswith("_dos_features"):
+        base_name = name_part[:-13]
+    elif name_part.endswith("_raw"):
+        base_name = name_part[:-4]
+    else:
+        base_name = name_part
+        
+    http_log_name = f"{base_name}_http.log"
+    input_http_log = input_file.parent / http_log_name
+    if input_http_log.is_file():
+        dest_http_log = out.parent / http_log_name
+        try:
+            import shutil
+            shutil.copy2(input_http_log, dest_http_log)
+            logger.info("Smart Copy: Da copy file http log sang thu muc dich: %s", dest_http_log)
+        except Exception as e:
+            logger.warning("Smart Copy: Khong the copy http log sang thu muc dich: %s", e)
+
     return df
 
 
@@ -233,7 +254,14 @@ def process_directory(input_dir: str, output_dir: str) -> None:
     logger.info("=" * 60)
 
     for i, csv_file in enumerate(csv_files, 1):
-        output_file = out_path / f"feature_for_DoS_{i}.csv" if len(csv_files) > 1 else out_path / "feature_for_DoS.csv"
+        name_part, _ = os.path.splitext(csv_file.name)
+        if name_part.endswith("_raw"):
+            base_name = name_part[:-4]
+        elif name_part.endswith("_dos_features"):
+            base_name = name_part[:-13]
+        else:
+            base_name = name_part
+        output_file = out_path / f"{base_name}_dos_features.csv"
         logger.info("")
         logger.info("─── [%d/%d] %s ───", i, len(csv_files), csv_file.name)
         filter_dos_features(str(csv_file), str(output_file))
@@ -287,9 +315,17 @@ def main() -> None:
         if args.output:
             output_path = args.output
         else:
-            out_dir = Path(DEFAULT_OUTPUT_DIR)
-            out_dir.mkdir(parents=True, exist_ok=True)
-            output_path = str(out_dir / "feature_for_DoS.csv")
+            dir_name = Path(DEFAULT_OUTPUT_DIR)
+            dir_name.mkdir(parents=True, exist_ok=True)
+            filename = input_path.name
+            name_part, _ = os.path.splitext(filename)
+            if name_part.endswith("_raw"):
+                base_name = name_part[:-4]
+            elif name_part.endswith("_dos_features"):
+                base_name = name_part[:-13]
+            else:
+                base_name = name_part
+            output_path = str(dir_name / f"{base_name}_dos_features.csv")
         filter_dos_features(str(input_path), output_path)
     else:
         logger.error("Đường dẫn không tồn tại: %s", input_path)
